@@ -1,10 +1,28 @@
 defmodule Fsrs.Scheduler do
   @moduledoc """
-  The FSRS scheduler.
-  FSRS 调度器。
+  Core FSRS scheduler implementation.
 
-  Enables the reviewing and future scheduling of cards according to the FSRS algorithm.
-  根据 FSRS 算法启用卡片的复习和未来调度。
+  This module contains the FSRS-6 scheduling logic aligned with
+  `open-spaced-repetition/py-fsrs` `v6.3.0`.
+
+  中文说明：该模块实现核心调度逻辑，并对齐 `py-fsrs v6.3.0`。
+
+  ## Units and conventions
+
+  - `learning_steps` and `relearning_steps` are stored in **seconds**
+  - interval formulas operate on **days**
+  - datetime values are expected to be **UTC**
+
+  ## Serialization
+
+  Scheduler values can be exported/imported with:
+
+  - `to_dict/1`, `from_dict/1`
+  - `to_json/2`, `from_json/1`
+  """
+
+  @typedoc """
+  Scheduler configuration and precomputed constants.
   """
 
   alias Fsrs.Card
@@ -35,8 +53,23 @@ defmodule Fsrs.Scheduler do
   ]
 
   @doc """
-  Creates a new scheduler with default or provided parameters.
-  使用默认或提供的参数创建一个新的调度器。
+  Builds a scheduler from options.
+
+  `parameters` accepts a tuple or list and must contain 21 values.
+  Steps accept seconds (`60`) or tuple units (`{:seconds, 60}`, `{:minutes, 1}`).
+  Parameter bounds are validated at initialization.
+
+  中文说明：创建调度器时会校验参数数量和范围，步长支持秒和元组单位。
+
+  ## Examples
+
+      iex> scheduler = Fsrs.Scheduler.new(enable_fuzzing: false)
+      iex> scheduler.enable_fuzzing
+      false
+
+      iex> scheduler = Fsrs.Scheduler.new(learning_steps: [{:minutes, 1}, 90])
+      iex> scheduler.learning_steps
+      [60, 90]
   """
   @spec new(Keyword.t()) :: t()
   def new(opts \\ []) do
@@ -82,8 +115,10 @@ defmodule Fsrs.Scheduler do
   end
 
   @doc """
-  Reschedules a card with this scheduler using historical review logs.
-  使用该调度器和历史复习日志重新调度卡片。
+  Replays historical review logs and returns the resulting card state.
+
+  Logs are sorted by review time before replay and must all match the target card ID.
+  中文说明：根据历史日志重排卡片状态，日志会先按时间排序并校验 card_id。
   """
   @spec reschedule_card(t(), Card.t(), list(ReviewLog.t())) :: Card.t()
   def reschedule_card(%__MODULE__{} = scheduler, %Card{} = card, review_logs)
@@ -114,15 +149,21 @@ defmodule Fsrs.Scheduler do
   end
 
   @doc """
-  Calculates a Card object's current retrievability for a given date and time.
-  计算卡片对象在给定日期和时间的当前可提取性。
+  Calculates current retrievability for a card.
 
-  The retrievability of a card is the predicted probability that the card is correctly recalled
-  at the provided datetime.
-  卡片的可提取性是在提供的日期时间正确回忆起卡片的预测概率。
+  Retrievability is the predicted probability of successful recall at `current_datetime`.
+  If no datetime is supplied, UTC now is used.
 
-  This implementation follows py-fsrs day-based elapsed-time behavior.
-  该实现遵循 py-fsrs 的按天计算已用时间行为。
+  This port follows py-fsrs day-based elapsed-time behavior.
+  中文说明：此实现使用 py-fsrs 的按天 elapsed days 语义。
+
+  ## Examples
+
+      iex> scheduler = Fsrs.Scheduler.new(enable_fuzzing: false)
+      iex> card = Fsrs.Card.new(stability: 2.5, last_review: ~U[2024-06-01 00:00:00Z])
+      iex> value = Fsrs.Scheduler.get_card_retrievability(scheduler, card, ~U[2024-06-02 00:00:00Z])
+      iex> value > 0.0 and value <= 1.0
+      true
   """
   @spec get_card_retrievability(t(), Card.t(), DateTime.t() | nil) :: float()
   def get_card_retrievability(%__MODULE__{} = scheduler, %Card{} = card, current_datetime \\ nil) do
@@ -137,11 +178,12 @@ defmodule Fsrs.Scheduler do
   end
 
   @doc """
-  Reviews a card with a given rating at a given time for a specified duration.
-  在给定时间以指定持续时间使用给定评分复习卡片。
+  Reviews a card and returns `{updated_card, review_log}`.
 
-  Returns a tuple with the updated card and a review log entry.
-  返回包含更新后的卡片和复习日志条目的元组。
+  The review datetime defaults to `DateTime.utc_now/0`.
+  Datetime inputs must be timezone-aware UTC values.
+
+  中文说明：执行一次复习并返回更新卡片和日志，要求 UTC 时间。
   """
   @spec review_card(t(), Card.t(), Rating.t(), DateTime.t() | nil, integer() | nil) ::
           {Card.t(), ReviewLog.t()}
@@ -224,8 +266,9 @@ defmodule Fsrs.Scheduler do
   end
 
   @doc """
-  Converts a Scheduler struct to a map for serialization.
-  将 Scheduler 结构体转换为用于序列化的映射。
+  Exports scheduler data as a Python-compatible map.
+
+  中文说明：导出为可跨语言使用的 map。
   """
   @spec to_dict(t()) :: map()
   def to_dict(%__MODULE__{} = scheduler), do: to_map(scheduler)
@@ -243,8 +286,10 @@ defmodule Fsrs.Scheduler do
   end
 
   @doc """
-  Creates a Scheduler struct from a serialized map.
-  从序列化的映射创建 Scheduler 结构体。
+  Restores a scheduler from a map payload.
+
+  Accepts atom-key and string-key maps.
+  中文说明：支持字符串键和原子键输入。
   """
   @spec from_dict(map()) :: t()
   def from_dict(source_map), do: from_map(source_map)
@@ -271,8 +316,9 @@ defmodule Fsrs.Scheduler do
   end
 
   @doc """
-  Serializes a Scheduler to JSON.
-  将 Scheduler 序列化为 JSON。
+  Serializes a scheduler to JSON.
+
+  中文说明：序列化为 JSON 字符串。
   """
   @spec to_json(t(), keyword()) :: String.t()
   def to_json(%__MODULE__{} = scheduler, opts \\ []) do
@@ -280,8 +326,9 @@ defmodule Fsrs.Scheduler do
   end
 
   @doc """
-  Deserializes a Scheduler from JSON.
-  从 JSON 反序列化 Scheduler。
+  Deserializes a scheduler from JSON.
+
+  中文说明：从 JSON 恢复调度器。
   """
   @spec from_json(String.t()) :: t()
   def from_json(source_json) when is_binary(source_json) do

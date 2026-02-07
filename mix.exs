@@ -2,9 +2,11 @@ defmodule Fsrs.MixProject do
   use Mix.Project
 
   def project do
+    version = "0.1.1"
+
     [
       app: :fsrs_ex,
-      version: "0.1.0",
+      version: version,
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       description: description(),
@@ -13,7 +15,21 @@ defmodule Fsrs.MixProject do
       homepage_url: "https://github.com/lulucatdev/fsrs_ex",
       docs: [
         main: "readme",
-        extras: ["README.md", "LICENSE"]
+        source_ref: "v#{version}",
+        extras: [
+          "README.md",
+          "guides/PORTING_POLICY.md",
+          "guides/PARITY_TESTING.md",
+          "guides/RELEASE_PROCESS.md",
+          "LICENSE"
+        ],
+        groups_for_extras: [
+          Guides: Path.wildcard("guides/*.md")
+        ],
+        groups_for_modules: [
+          "Core API": [Fsrs, Fsrs.Scheduler, Fsrs.Card, Fsrs.ReviewLog],
+          "Enums & Constants": [Fsrs.Rating, Fsrs.State, Fsrs.Constants]
+        ]
       ],
       deps: deps()
     ]
@@ -27,7 +43,7 @@ defmodule Fsrs.MixProject do
   end
 
   defp description do
-    "FSRS (Free Spaced Repetition Scheduler) implementation for Elixir."
+    "Direct Elixir port of open-spaced-repetition/py-fsrs (FSRS-6)."
   end
 
   defp package do
@@ -37,7 +53,10 @@ defmodule Fsrs.MixProject do
       licenses: ["MIT"],
       files: [
         "lib",
+        "guides",
         "mix.exs",
+        "Makefile",
+        "llms.txt",
         "README.md",
         "LICENSE",
         "test/fixtures/generate_py_fixture.py",

@@ -1,20 +1,29 @@
 defmodule Fsrs.State do
   @moduledoc """
-  Enum representing the learning state of a Card object.
-  表示卡片对象学习状态的枚举。
+  Card state enum used by FSRS.
+
+  Mapping:
+
+  - `:learning` => `1`
+  - `:review` => `2`
+  - `:relearning` => `3`
+
+  中文说明：卡片状态枚举，支持原子与整数映射。
   """
 
   @type t :: :learning | :review | :relearning
 
   @doc """
-  Returns all possible card states
-  返回所有可能的卡片状态
+  Returns all possible states.
+
+  中文说明：返回全部状态值。
   """
   def all, do: [:learning, :review, :relearning]
 
   @doc """
-  Converts an atom state to its integer representation
-  将原子状态转换为其整数表示
+  Converts atom state to integer representation.
+
+  中文说明：原子状态转整数。
   """
   @spec to_int(t()) :: integer()
   def to_int(:learning), do: 1
@@ -22,8 +31,9 @@ defmodule Fsrs.State do
   def to_int(:relearning), do: 3
 
   @doc """
-  Converts an integer to its atom state representation
-  将整数转换为其原子状态表示
+  Converts integer state to atom representation.
+
+  中文说明：整数状态转原子。
   """
   @spec from_int(integer()) :: t()
   def from_int(1), do: :learning

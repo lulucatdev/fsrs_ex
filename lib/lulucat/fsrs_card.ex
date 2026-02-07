@@ -1,10 +1,18 @@
 defmodule Fsrs.Card do
   @moduledoc """
-  Represents a flashcard in the FSRS system.
-  表示 FSRS 系统中的一张抽认卡。
+  Card model used by the FSRS scheduler.
+
+  A card keeps its scheduling state (`state`, `step`, `stability`, `difficulty`)
+  plus timing fields (`due`, `last_review`).
+
+  中文说明：表示一张 FSRS 卡片，包含状态、难度、稳定性与时间字段。
   """
 
   alias Fsrs.State
+
+  @typedoc """
+  FSRS card struct.
+  """
 
   @type t :: %__MODULE__{
           card_id: integer(),
@@ -27,8 +35,21 @@ defmodule Fsrs.Card do
   ]
 
   @doc """
-  Creates a new card with default values.
-  使用默认值创建一张新卡片。
+  Creates a card.
+
+  Defaults:
+
+  - `state: :learning`
+  - `step: 0` when in learning state
+  - `due: DateTime.utc_now/0`
+
+  中文说明：新卡默认学习态，学习态默认 `step: 0`。
+
+  ## Examples
+
+      iex> card = Fsrs.Card.new(card_id: 123)
+      iex> {card.card_id, card.state, card.step}
+      {123, :learning, 0}
   """
   @spec new(Keyword.t()) :: t()
   def new(opts \\ []) do
@@ -52,8 +73,10 @@ defmodule Fsrs.Card do
   end
 
   @doc """
-  Converts a Card struct to a map for serialization.
-  将 Card 结构体转换为用于序列化的映射。
+  Converts a card to a Python-compatible map.
+
+  Datetime fields are rendered as ISO8601 strings with `+00:00` UTC suffix.
+  中文说明：导出 map 时使用 Python 风格 UTC 时间字符串。
   """
   @spec to_dict(t()) :: map()
   def to_dict(%__MODULE__{} = card), do: to_map(card)
@@ -73,8 +96,12 @@ defmodule Fsrs.Card do
   end
 
   @doc """
-  Creates a Card struct from a serialized map.
-  从序列化的映射创建 Card 结构体。
+  Restores a card from a serialized map.
+
+  Supports atom-key and string-key maps.
+  `state` may be provided as integer or atom.
+
+  中文说明：支持字符串键/原子键，`state` 支持整数或原子。
   """
   @spec from_dict(map()) :: t()
   def from_dict(source_map), do: from_map(source_map)
@@ -106,8 +133,9 @@ defmodule Fsrs.Card do
   end
 
   @doc """
-  Serializes a Card to JSON.
-  将 Card 序列化为 JSON。
+  Serializes a card to JSON.
+
+  中文说明：将卡片序列化为 JSON。
   """
   @spec to_json(t(), keyword()) :: String.t()
   def to_json(%__MODULE__{} = card, opts \\ []) do
@@ -115,8 +143,9 @@ defmodule Fsrs.Card do
   end
 
   @doc """
-  Deserializes a Card from JSON.
-  从 JSON 反序列化 Card。
+  Deserializes a card from JSON.
+
+  中文说明：从 JSON 恢复卡片结构。
   """
   @spec from_json(String.t()) :: t()
   def from_json(source_json) when is_binary(source_json) do

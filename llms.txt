@@ -1,0 +1,38 @@
+# fsrs_ex
+
+> fsrs_ex is an Elixir implementation of FSRS that directly ports open-spaced-repetition/py-fsrs v6.3.0 (FSRS-6), with parity fixtures and release tooling.
+
+This file provides LLM-oriented navigation for the repository.
+
+## Project
+
+- [Repository](https://github.com/lulucatdev/fsrs_ex): Source code, release history, and issue tracking.
+- [README](https://github.com/lulucatdev/fsrs_ex/blob/main/README.md): Main overview, installation, and usage.
+- [Hex package](https://hex.pm/packages/fsrs_ex): Published package metadata and versions.
+- [HexDocs](https://hexdocs.pm/fsrs_ex): API documentation.
+
+## Guides
+
+- [Porting policy](https://github.com/lulucatdev/fsrs_ex/blob/main/guides/PORTING_POLICY.md): Upstream baseline and alignment rules.
+- [Parity testing](https://github.com/lulucatdev/fsrs_ex/blob/main/guides/PARITY_TESTING.md): Fixture generation and parity checks.
+- [Release process](https://github.com/lulucatdev/fsrs_ex/blob/main/guides/RELEASE_PROCESS.md): Preflight and publish workflow.
+
+## Source Files
+
+- [Fsrs module](https://github.com/lulucatdev/fsrs_ex/blob/main/lib/lulucat/fsrs.ex): Public API entry points.
+- [Scheduler](https://github.com/lulucatdev/fsrs_ex/blob/main/lib/lulucat/fsrs_scheduler.ex): Core scheduling logic.
+- [Card](https://github.com/lulucatdev/fsrs_ex/blob/main/lib/lulucat/fsrs_card.ex): Card data model and serialization.
+- [ReviewLog](https://github.com/lulucatdev/fsrs_ex/blob/main/lib/lulucat/fsrs_review_log.ex): Review log model and serialization.
+- [Constants](https://github.com/lulucatdev/fsrs_ex/blob/main/lib/lulucat/fsrs_constants.ex): FSRS defaults, bounds, and fuzz ranges.
+
+## Validation Assets
+
+- [Python fixture generator](https://github.com/lulucatdev/fsrs_ex/blob/main/test/fixtures/generate_py_fixture.py): Produces deterministic parity fixtures using py-fsrs.
+- [Parity fixture](https://github.com/lulucatdev/fsrs_ex/blob/main/test/fixtures/py_fsrs_v6_3_0_fixture.json): Frozen cross-language fixture data.
+- [Parity tests](https://github.com/lulucatdev/fsrs_ex/blob/main/test/fsrs_py_parity_test.exs): Elixir checks against Python fixture outputs.
+
+## Optional
+
+- [py-fsrs upstream](https://github.com/open-spaced-repetition/py-fsrs): Upstream implementation used as baseline.
+- [FSRS algorithm wiki](https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm): Algorithm formulas and historical versions.
+- [Jarrett Ye (X)](https://x.com/JarrettYe): Primary algorithm author profile.

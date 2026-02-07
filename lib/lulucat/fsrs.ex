@@ -1,11 +1,25 @@
 defmodule Fsrs do
   @moduledoc """
-  Free Spaced Repetition Scheduler (FSRS) implementation in Elixir.
-  Elixir 实现的免费间隔重复调度器 (FSRS)。
+  Public API for `fsrs_ex`.
 
-  This module brings together all FSRS components and provides the main interface
-  for creating and working with cards, scheduling reviews, and tracking review logs.
-  该模块整合了所有 FSRS 组件，并提供了用于创建和操作卡片、安排复习以及跟踪复习日志的主要接口。
+  This module exposes the core entry points for creating schedulers, cards,
+  and review logs, then running reviews and retrievability calculations.
+
+  Port baseline: `open-spaced-repetition/py-fsrs` `v6.3.0` (FSRS-6).
+
+  中文说明：这是 `fsrs_ex` 的公共 API 模块，对齐 `py-fsrs v6.3.0`。
+
+  ## Main modules
+
+  - `Fsrs.Scheduler` for scheduling and review logic
+  - `Fsrs.Card` for card state
+  - `Fsrs.ReviewLog` for review events
+  - `Fsrs.Rating` and `Fsrs.State` enum helpers
+
+  ## Timezone policy
+
+  Scheduler operations that consume datetimes expect UTC datetimes.
+  调度相关时间参数要求使用 UTC。
   """
 
   alias Fsrs.Card
@@ -15,8 +29,17 @@ defmodule Fsrs do
   alias Fsrs.Scheduler
 
   @doc """
-  Creates a new scheduler with the given options.
-  使用给定选项创建一个新的调度器。
+  Creates a scheduler.
+
+  Common options:
+
+  - `:parameters` 21 FSRS-6 weights
+  - `:desired_retention` target recall probability (default `0.9`)
+  - `:learning_steps` and `:relearning_steps` in seconds or tuple units
+  - `:maximum_interval` in days
+  - `:enable_fuzzing` boolean
+
+  中文说明：创建调度器，可自定义参数和学习步长。
 
   ## Examples
 
@@ -30,8 +53,10 @@ defmodule Fsrs do
   end
 
   @doc """
-  Creates a new card with the given options.
-  使用给定选项创建一个新的卡片。
+  Creates a card.
+
+  New cards default to `:learning` state and `step: 0`.
+  中文说明：新卡默认是学习态（`step: 0`）。
 
   ## Examples
 
@@ -45,8 +70,10 @@ defmodule Fsrs do
   end
 
   @doc """
-  Creates a new review log with the given options.
-  使用给定选项创建一个新的复习日志。
+  Creates a review log entry.
+
+  Required options are `:card_id`, `:rating`, and `:review_datetime`.
+  中文说明：复习日志至少需要卡片 ID、评分和复习时间。
 
   ## Examples
 
@@ -61,8 +88,12 @@ defmodule Fsrs do
   end
 
   @doc """
-  Reviews a card with the given scheduler, rating, and other options.
-  使用给定的调度器、评分和其他选项复习卡片。
+  Reviews a card and returns `{updated_card, review_log}`.
+
+  The optional `review_datetime` defaults to `DateTime.utc_now/0`.
+  The optional `review_duration` is stored in the review log.
+
+  中文说明：复习后返回更新卡片和日志。
 
   ## Examples
 
@@ -81,8 +112,12 @@ defmodule Fsrs do
   end
 
   @doc """
-  Reschedules a card from historical review logs with the given scheduler.
-  使用给定调度器和历史复习日志重新调度卡片。
+  Replays historical logs and returns a rescheduled card state.
+
+  Logs are sorted by `review_datetime` before replay.
+  The function validates that every log belongs to the same `card_id`.
+
+  中文说明：按历史日志重放计算卡片状态，内部会先排序并校验卡片 ID。
 
   ## Examples
 
@@ -100,8 +135,12 @@ defmodule Fsrs do
   end
 
   @doc """
-  Calculates a card's retrievability with the given scheduler and datetime.
-  计算卡片在给定调度器和日期时间下的可提取性。
+  Calculates retrievability at a given datetime.
+
+  If `current_datetime` is omitted, `DateTime.utc_now/0` is used.
+  If `card.last_review` is `nil`, returns `0.0`.
+
+  中文说明：计算在指定时间点的可回忆概率。
 
   ## Examples
 
@@ -117,8 +156,9 @@ defmodule Fsrs do
   end
 
   @doc """
-  Returns the default FSRS parameters.
-  返回默认的 FSRS 参数。
+  Returns the default FSRS-6 parameter tuple.
+
+  中文说明：返回 FSRS-6 的默认 21 参数。
   """
   @spec default_parameters() :: tuple()
   def default_parameters do
@@ -126,8 +166,9 @@ defmodule Fsrs do
   end
 
   @doc """
-  Returns the minimum stability value allowed.
-  返回允许的最小稳定性值。
+  Returns the minimum allowed stability value.
+
+  中文说明：返回稳定性的最小下界。
   """
   @spec stability_min() :: float()
   def stability_min do
@@ -135,8 +176,9 @@ defmodule Fsrs do
   end
 
   @doc """
-  Returns the fuzz ranges used in interval calculation.
-  返回用于间隔计算的模糊范围。
+  Returns fuzzing ranges used when interval fuzzing is enabled.
+
+  中文说明：返回区间模糊处理所用范围。
   """
   @spec fuzz_ranges() :: list(map())
   def fuzz_ranges do

@@ -1,24 +1,31 @@
 defmodule Fsrs.Constants do
   @moduledoc """
-  Constants used by the FSRS system.
-  FSRS 系统使用的常量。
+  Constants for FSRS-6 behavior.
+
+  Includes default parameters, parameter bounds, and fuzzing ranges.
+
+  中文说明：集中定义 FSRS-6 默认参数、边界与 fuzz 范围。
   """
 
   @doc """
-  Minimum stability value allowed
-  允许的最小稳定性值
+  Minimum stability value allowed.
+
+  中文说明：稳定性下限。
   """
   def stability_min, do: 0.001
 
   @doc """
-  Maximum initial stability value allowed
-  允许的初始稳定性最大值
+  Maximum initial stability value allowed.
+
+  中文说明：初始稳定性的上限。
   """
   def initial_stability_max, do: 100.0
 
   @doc """
-  Default parameters for the FSRS algorithm
-  FSRS 算法的默认参数
+  Default FSRS-6 parameter tuple.
+
+  Baseline: `py-fsrs v6.3.0`.
+  中文说明：与 py-fsrs v6.3.0 对齐的默认参数。
   """
   def default_parameters do
     {
@@ -48,7 +55,8 @@ defmodule Fsrs.Constants do
 
   @doc """
   Lower bounds for FSRS parameters.
-  FSRS 参数下界。
+
+  中文说明：参数下界。
   """
   def lower_bounds_parameters do
     {
@@ -78,7 +86,8 @@ defmodule Fsrs.Constants do
 
   @doc """
   Upper bounds for FSRS parameters.
-  FSRS 参数上界。
+
+  中文说明：参数上界。
   """
   def upper_bounds_parameters do
     {
@@ -107,8 +116,9 @@ defmodule Fsrs.Constants do
   end
 
   @doc """
-  Fuzz ranges used for interval calculation
-  用于间隔计算的模糊范围
+  Fuzz ranges used for interval calculation.
+
+  中文说明：用于区间模糊处理的范围表。
   """
   def fuzz_ranges do
     [

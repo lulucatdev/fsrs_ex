@@ -1,10 +1,18 @@
 defmodule Fsrs.ReviewLog do
   @moduledoc """
-  Represents the log entry of a Card object that has been reviewed.
-  表示已被复习的卡片对象的日志条目。
+  Review event model.
+
+  Each review log stores card identity, user rating, review timestamp,
+  and optional review duration.
+
+  中文说明：表示单次复习事件，记录评分、时间和可选耗时。
   """
 
   alias Fsrs.Rating
+
+  @typedoc """
+  Review log struct.
+  """
 
   @type t :: %__MODULE__{
           card_id: integer(),
@@ -21,8 +29,21 @@ defmodule Fsrs.ReviewLog do
   ]
 
   @doc """
-  Creates a new review log entry.
-  创建一个新的复习日志条目。
+  Creates a review log entry.
+
+  Required fields:
+
+  - `card_id`
+  - `rating`
+  - `review_datetime`
+
+  中文说明：创建日志时必须传入 card_id、rating、review_datetime。
+
+  ## Examples
+
+      iex> log = Fsrs.ReviewLog.new(card_id: 1, rating: :good, review_datetime: ~U[2024-01-01 00:00:00Z])
+      iex> {log.card_id, log.rating}
+      {1, :good}
   """
   @spec new(Keyword.t()) :: t()
   def new(opts) do
@@ -40,8 +61,9 @@ defmodule Fsrs.ReviewLog do
   end
 
   @doc """
-  Converts a ReviewLog struct to a map for serialization.
-  将 ReviewLog 结构体转换为用于序列化的映射。
+  Converts a review log to a Python-compatible map.
+
+  中文说明：导出 map，字段与 Python 版本兼容。
   """
   @spec to_dict(t()) :: map()
   def to_dict(%__MODULE__{} = review_log), do: to_map(review_log)
@@ -57,8 +79,12 @@ defmodule Fsrs.ReviewLog do
   end
 
   @doc """
-  Creates a ReviewLog struct from a serialized map.
-  从序列化的映射创建 ReviewLog 结构体。
+  Restores a review log from a serialized map.
+
+  Supports atom-key and string-key maps.
+  `rating` may be provided as integer or atom.
+
+  中文说明：支持字符串键/原子键，rating 支持整数或原子。
   """
   @spec from_dict(map()) :: t()
   def from_dict(source_map), do: from_map(source_map)
@@ -83,8 +109,9 @@ defmodule Fsrs.ReviewLog do
   end
 
   @doc """
-  Serializes a ReviewLog to JSON.
-  将 ReviewLog 序列化为 JSON。
+  Serializes a review log to JSON.
+
+  中文说明：序列化为 JSON。
   """
   @spec to_json(t(), keyword()) :: String.t()
   def to_json(%__MODULE__{} = review_log, opts \\ []) do
@@ -92,8 +119,9 @@ defmodule Fsrs.ReviewLog do
   end
 
   @doc """
-  Deserializes a ReviewLog from JSON.
-  从 JSON 反序列化 ReviewLog。
+  Deserializes a review log from JSON.
+
+  中文说明：从 JSON 恢复日志结构。
   """
   @spec from_json(String.t()) :: t()
   def from_json(source_json) when is_binary(source_json) do

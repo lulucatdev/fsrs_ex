@@ -1,20 +1,30 @@
 defmodule Fsrs.Rating do
   @moduledoc """
-  Enum representing the four possible ratings when reviewing a card.
-  表示复习卡片时四种可能评分的枚举。
+  Rating enum used in FSRS review events.
+
+  Mapping:
+
+  - `:again` => `1`
+  - `:hard` => `2`
+  - `:good` => `3`
+  - `:easy` => `4`
+
+  中文说明：复习评分枚举，支持原子与整数映射。
   """
 
   @type t :: :again | :hard | :good | :easy
 
   @doc """
-  Returns all possible card ratings
-  返回所有可能的卡片评分
+  Returns all possible ratings.
+
+  中文说明：返回全部评分值。
   """
   def all, do: [:again, :hard, :good, :easy]
 
   @doc """
-  Converts an atom rating to its integer representation
-  将原子评分转换为其整数表示
+  Converts atom rating to integer representation.
+
+  中文说明：原子评分转整数。
   """
   @spec to_int(t()) :: integer()
   def to_int(:again), do: 1
@@ -23,8 +33,9 @@ defmodule Fsrs.Rating do
   def to_int(:easy), do: 4
 
   @doc """
-  Converts an integer to its atom rating representation
-  将整数转换为其原子评分表示
+  Converts integer rating to atom representation.
+
+  中文说明：整数评分转原子。
   """
   @spec from_int(integer()) :: t()
   def from_int(1), do: :again
