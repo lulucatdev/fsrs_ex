@@ -34,7 +34,7 @@ Add `fsrs_ex` to your dependencies:
 ```elixir
 def deps do
   [
-    {:fsrs_ex, "~> 0.1.1"}
+    {:fsrs_ex, "~> 0.1.2"}
   ]
 end
 ```

@@ -2,7 +2,7 @@ defmodule Fsrs.MixProject do
   use Mix.Project
 
   def project do
-    version = "0.1.1"
+    version = "0.1.2"
 
     [
       app: :fsrs_ex,
@@ -18,6 +18,7 @@ defmodule Fsrs.MixProject do
         source_ref: "v#{version}",
         extras: [
           "README.md",
+          "guides/GETTING_STARTED.md",
           "guides/PORTING_POLICY.md",
           "guides/PARITY_TESTING.md",
           "guides/RELEASE_PROCESS.md",
