@@ -81,6 +81,10 @@ defmodule Fsrs.Scheduler do
     validate_parameters!(parameters)
 
     desired_retention = Keyword.get(opts, :desired_retention, 0.9)
+    validate_desired_retention!(desired_retention)
+
+    maximum_interval = Keyword.get(opts, :maximum_interval, 36500)
+    validate_maximum_interval!(maximum_interval)
 
     # Convert learning_steps and relearning_steps from timedeltas to seconds
     # 将 learning_steps 和 relearning_steps 从时间增量转换为秒
@@ -854,5 +858,21 @@ defmodule Fsrs.Scheduler do
   defp normalize_step(step, field_name) do
     raise ArgumentError,
           "invalid #{field_name} entry: #{inspect(step)}; expected seconds or {:seconds|:minutes, value}"
+  end
+
+  # Validation helpers
+
+  defp validate_desired_retention!(value) do
+    unless is_number(value) and value > 0.0 and value < 1.0 do
+      raise ArgumentError,
+            "desired_retention must be between 0.0 and 1.0 (exclusive), got: #{inspect(value)}"
+    end
+  end
+
+  defp validate_maximum_interval!(value) do
+    unless is_integer(value) and value >= 1 do
+      raise ArgumentError,
+            "maximum_interval must be a positive integer (>= 1), got: #{inspect(value)}"
+    end
   end
 end
