@@ -132,9 +132,35 @@ defmodule Fsrs.ReviewLog do
 
   # Private functions
 
-  defp parse_datetime(iso_string) do
-    {:ok, datetime, _offset} = DateTime.from_iso8601(iso_string)
-    datetime
+  defp parse_datetime(%DateTime{} = datetime), do: ensure_utc(datetime)
+
+  defp parse_datetime(iso_string) when is_binary(iso_string) do
+    case DateTime.from_iso8601(iso_string) do
+      {:ok, datetime, _offset} ->
+        ensure_utc(datetime)
+
+      {:error, reason} ->
+        raise ArgumentError,
+              "Invalid datetime format: #{iso_string}, reason: #{inspect(reason)}"
+    end
+  end
+
+  defp parse_datetime(unix_ts) when is_integer(unix_ts) do
+    DateTime.from_unix!(unix_ts, :millisecond)
+  end
+
+  defp parse_datetime(other) do
+    raise ArgumentError,
+          "Invalid datetime value: #{inspect(other)}. Expected DateTime struct, ISO8601 string, or unix timestamp."
+  end
+
+  defp ensure_utc(%DateTime{time_zone: "Etc/UTC"} = datetime), do: datetime
+
+  defp ensure_utc(datetime) do
+    case DateTime.shift_zone(datetime, "Etc/UTC") do
+      {:ok, utc_datetime} -> utc_datetime
+      {:error, reason} -> raise ArgumentError, "Failed to convert to UTC: #{inspect(reason)}"
+    end
   end
 
   defp datetime_to_python_iso8601(datetime) do
