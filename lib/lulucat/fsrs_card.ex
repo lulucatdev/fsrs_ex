@@ -157,15 +157,13 @@ defmodule Fsrs.Card do
   # Private functions
 
   defp generate_card_id do
-    # Epoch milliseconds of when the card was created.
-    # 创建卡片时的 epoch 毫秒时间戳。
-    card_id = System.system_time(:millisecond)
-
-    # Wait 1 ms to prevent potential card_id collision on next card creation.
-    # 等待 1 毫秒，防止下一次创建卡片时发生 card_id 冲突。
-    Process.sleep(1)
-
-    card_id
+    # Use nanosecond timestamp combined with a random component for unique IDs.
+    # This avoids Process.sleep(1) bottleneck while maintaining uniqueness.
+    # 使用纳秒时间戳结合随机组件生成唯一ID，避免 Process.sleep(1) 的性能瓶颈。
+    timestamp = System.system_time(:nanosecond)
+    random_component = :rand.uniform(1000)
+    
+    Bitwise.bxor(timestamp, random_component)
   end
 
   defp handle_step(step, state) do
