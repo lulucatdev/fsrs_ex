@@ -34,12 +34,65 @@ defmodule Fsrs.Rating do
 
   @doc """
   Converts integer rating to atom representation.
+  Returns `{:ok, rating}` on success, `:error` on invalid input.
 
-  中文说明：整数评分转原子。
+  中文说明：整数评分转原子，成功返回 `{:ok, rating}`，无效输入返回 `:error`。
+
+  ## Examples
+
+      iex> Fsrs.Rating.from_int(1)
+      {:ok, :again}
+      
+      iex> Fsrs.Rating.from_int(5)
+      :error
   """
-  @spec from_int(integer()) :: t()
-  def from_int(1), do: :again
-  def from_int(2), do: :hard
-  def from_int(3), do: :good
-  def from_int(4), do: :easy
+  @spec from_int(integer()) :: {:ok, t()} | :error
+  def from_int(1), do: {:ok, :again}
+  def from_int(2), do: {:ok, :hard}
+  def from_int(3), do: {:ok, :good}
+  def from_int(4), do: {:ok, :easy}
+  def from_int(_), do: :error
+
+  @doc """
+  Converts integer rating to atom representation.
+  Raises `ArgumentError` on invalid input.
+
+  中文说明：整数评分转原子，无效输入抛出 `ArgumentError`。
+
+  ## Examples
+
+      iex> Fsrs.Rating.from_int!(1)
+      :again
+      
+      iex> Fsrs.Rating.from_int!(5)
+      ** (ArgumentError) invalid rating: 5, expected 1-4
+  """
+  @spec from_int!(integer()) :: t()
+  def from_int!(n) do
+    case from_int(n) do
+      {:ok, rating} -> rating
+      :error -> raise ArgumentError, "invalid rating: #{n}, expected 1-4"
+    end
+  end
+
+  @doc """
+  Checks if the given value is a valid rating.
+
+  中文说明：检查给定值是否为有效评分。
+
+  ## Examples
+
+      iex> Fsrs.Rating.valid?(:good)
+      true
+      
+      iex> Fsrs.Rating.valid?(5)
+      false
+  """
+  @spec valid?(t() | integer()) :: boolean()
+  def valid?(:again), do: true
+  def valid?(:hard), do: true
+  def valid?(:good), do: true
+  def valid?(:easy), do: true
+  def valid?(n) when is_integer(n) and n in 1..4, do: true
+  def valid?(_), do: false
 end
