@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir: ['1.15', '1.16', '1.17', '1.18']
+        otp: ['25', '26', '27']
+    
+    name: Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: ${{ matrix.elixir }}
+        otp-version: ${{ matrix.otp }}
+    
+    - name: Restore dependencies cache
+      uses: actions/cache@v3
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+    
+    - name: Install dependencies
+      run: mix deps.get
+    
+    - name: Check formatting
+      run: mix format --check-formatted
+    
+    - name: Compile with warnings as errors
+      run: mix compile --warnings-as-errors
+    
+    - name: Run tests
+      run: mix test
+
+  python-parity:
+    runs-on: ubuntu-latest
+    name: Python Parity Tests
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: '1.18'
+        otp-version: '27'
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Restore dependencies cache
+      uses: actions/cache@v3
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+    
+    - name: Install Elixir dependencies
+      run: mix deps.get
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install fsrs==6.3.0
+    
+    - name: Regenerate fixtures
+      run: |
+        python test/fixtures/generate_py_fixture.py test/fixtures/py_fsrs_v6_3_0_fixture.json
+    
+    - name: Run parity tests
+      run: mix test test/fsrs_py_parity_test.exs
