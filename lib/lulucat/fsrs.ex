@@ -184,4 +184,105 @@ defmodule Fsrs do
   def fuzz_ranges do
     Constants.fuzz_ranges()
   end
+
+  @doc """
+  Reviews multiple cards in batch and returns a list of `{updated_card, review_log}` tuples.
+
+  This is more efficient than calling `review_card/5` multiple times when processing
+  many cards with the same scheduler and review datetime.
+
+  中文说明：批量复习多张卡片，返回 `{updated_card, review_log}` 列表。
+
+  ## Examples
+
+      iex> scheduler = Fsrs.new_scheduler(enable_fuzzing: false)
+      iex> cards = [Fsrs.new_card(), Fsrs.new_card()]
+      iex> card_ratings = Enum.zip(cards, [:good, :hard])
+      iex> results = Fsrs.review_cards(scheduler, card_ratings)
+      iex> length(results) == 2
+      true
+  """
+  @spec review_cards(
+          Scheduler.t(),
+          list({Card.t(), Rating.t()}),
+          DateTime.t() | nil
+        ) :: list({Card.t(), ReviewLog.t()})
+  def review_cards(scheduler, card_rating_pairs, review_datetime \\ nil) do
+    Enum.map(card_rating_pairs, fn {card, rating} ->
+      review_card(scheduler, card, rating, review_datetime)
+    end)
+  end
+
+  @doc """
+  Calculates retrievability for multiple cards in batch.
+
+  Returns a list of `{card, retrievability}` tuples.
+
+  中文说明：批量计算多张卡片的可回忆概率，返回 `{card, retrievability}` 列表。
+
+  ## Examples
+
+      iex> scheduler = Fsrs.new_scheduler(enable_fuzzing: false)
+      iex> card1 = Fsrs.new_card(stability: 2.5, last_review: DateTime.utc_now())
+      iex> card2 = Fsrs.new_card(stability: 5.0, last_review: DateTime.utc_now())
+      iex> results = Fsrs.get_cards_retrievability(scheduler, [card1, card2])
+      iex> length(results) == 2
+      true
+  """
+  @spec get_cards_retrievability(
+          Scheduler.t(),
+          list(Card.t()),
+          DateTime.t() | nil
+        ) :: list({Card.t(), float()})
+  def get_cards_retrievability(scheduler, cards, current_datetime \\ nil) do
+    Enum.map(cards, fn card ->
+      {card, get_card_retrievability(scheduler, card, current_datetime)}
+    end)
+  end
+
+  @doc """
+  Gets cards that are due for review at the given datetime.
+
+  Returns a list of cards where `card.due` is less than or equal to the given datetime.
+
+  中文说明：获取在指定时间到期的卡片。
+
+  ## Examples
+
+      iex> scheduler = Fsrs.new_scheduler(enable_fuzzing: false)
+      iex> card1 = Fsrs.new_card(due: DateTime.add(DateTime.utc_now(), -1, :hour))
+      iex> card2 = Fsrs.new_card(due: DateTime.add(DateTime.utc_now(), 1, :hour))
+      iex> due_cards = Fsrs.get_due_cards([card1, card2])
+      iex> length(due_cards) == 1
+      true
+  """
+  @spec get_due_cards(list(Card.t()), DateTime.t() | nil) :: list(Card.t())
+  def get_due_cards(cards, current_datetime \\ nil) do
+    current_datetime = current_datetime || DateTime.utc_now()
+
+    Enum.filter(cards, fn card ->
+      DateTime.compare(card.due, current_datetime) != :gt
+    end)
+  end
+
+  @doc """
+  Sorts cards by their due date.
+
+  Returns cards sorted from most overdue to least due.
+
+  中文说明：按到期时间排序卡片，从最逾期到最晚到期。
+
+  ## Examples
+
+      iex> card1 = Fsrs.new_card(due: ~U[2024-01-03 00:00:00Z])
+      iex> card2 = Fsrs.new_card(due: ~U[2024-01-01 00:00:00Z])
+      iex> card3 = Fsrs.new_card(due: ~U[2024-01-02 00:00:00Z])
+      iex> sorted = Fsrs.sort_cards_by_due([card1, card2, card3])
+      iex> Enum.map(sorted, &&(&1.due |> DateTime.to_date())) == [~D[2024-01-01], ~D[2024-01-02], ~D[2024-01-03]]
+      true
+  """
+  @spec sort_cards_by_due(list(Card.t())) :: list(Card.t())
+  def sort_cards_by_due(cards) do
+    Enum.sort_by(cards, &&(&1.due), DateTime)
+  end
 end
